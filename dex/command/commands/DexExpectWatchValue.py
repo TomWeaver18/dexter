@@ -28,6 +28,30 @@ from dex.command.CommandBase import CommandBase
 from dex.heuristic import StepValueInfo
 
 
+class _WildCard(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+
+class _WildCardOptional(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+
+class _WildCardAtLeastZero(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+
+class _WildCardAtLeastOne(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+
 def _check_watch_order(actual_watches, expected_values):
     """Use difflib to figure out whether the values are in the expected order
     or not.
@@ -71,6 +95,13 @@ class DexExpectWatchValue(CommandBase):
             raise TypeError('expected at least two args')
 
         self.expression = args[0]
+
+        special_values = DexExpectWatchValue.special_values().values()
+
+        for arg in args:
+            if arg in special_values:
+                print('w00t: {} ({})'.format(arg, args))
+
         self.values = [str(arg) for arg in args[1:]]
         try:
             on_line = kwargs.pop('on_line')
@@ -180,3 +211,12 @@ class DexExpectWatchValue(CommandBase):
                     v for v in self.values if v in
                     [w.value_info.value for w in self.expected_watches]
                 ])
+
+    @classmethod
+    def special_values(cls):
+        return {
+            'any_value': _WildCard,
+            'any_or_no_values': _WildCardOptional,
+            'any_values': _WildCardAtLeastOne,
+            'any_or_no_values': _WildCardAtLeastZero,
+        }

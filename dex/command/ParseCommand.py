@@ -76,6 +76,7 @@ def _safe_eval(command_text, valid_commands):  # noqa
     assert isinstance(module, ast.Module), type(module)
 
     command_name = None
+    special_values = None
     for node1 in ast.iter_child_nodes(module):
         if not isinstance(node1, ast.Expr):
             location = ('', node1.lineno, node1.col_offset + 1, command_text)
@@ -100,6 +101,8 @@ def _safe_eval(command_text, valid_commands):  # noqa
                     'expected a call to {}'.format(', '.join(valid_commands)),
                     location)
 
+            special_values = valid_commands[command_name].special_values()
+
             children = children[1:]
             for i, node3 in enumerate(children):
                 if isinstance(node3, ast.keyword):
@@ -110,14 +113,19 @@ def _safe_eval(command_text, valid_commands):  # noqa
                 try:
                     ast.literal_eval(node3)
                 except ValueError:
-                    raise SyntaxError(
-                        'argument #{}: expected literal value'.format(i + 1),
-                        location)
+                    if (isinstance(node3, ast.Name)
+                            and node3.id in special_values):
+                        continue
 
-    # eval can modify the contents of this dict so only pass a copy.
-    valid_commands_copy = valid_commands.copy()
+                    raise SyntaxError(
+                        'argument #{}:'
+                        ' expected literal value'.format(i + 1), location)
+
+    globals_ = {command_name: valid_commands[command_name]}
+    globals_.update(special_values)
+
     # pylint: disable=eval-used
-    return (command_name, eval(command_text, valid_commands_copy))
+    return (command_name, eval(command_text, globals_))
     # pylint: enable=eval-used
 
 

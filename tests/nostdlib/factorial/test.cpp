@@ -22,8 +22,8 @@ int main()
 
 // DexExpectWatchValue('n', '8', on_line=9)
 
-// DexExpectWatchValue('i', '1', '2', '3', '4', '5', '6', '7', '8', on_line=12)
-// DexExpectWatchValue('fac', '1', '2', '6', '24', '120', '720', '5040', on_line=12)
+// DexExpectWatchValue('i', '1', '2', '3', '4', '5', any_value, '7', '8', on_line=12)
+// DexExpectWatchValue('fac', '1', '2', '6', '24', '120', any_values, on_line=12)
 // DexExpectWatchValue('n', '8', on_line=12)
 
 // DexExpectWatchValue('fac', '40320', on_line=14)
