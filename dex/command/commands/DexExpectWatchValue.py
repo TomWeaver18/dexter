@@ -28,6 +28,36 @@ from dex.command.CommandBase import CommandBase
 from dex.heuristic import StepValueInfo
 
 
+class _SpecialAny(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+class _SpecialAnyMultiple(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+class _SpecialMissing(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+class _SpecialMissingMultiple(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+class _SpecialIgnore(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
+class _SpecialIgnoreMultiple(object):
+    """ TO BE FILLED IN
+    """
+    pass
+
 def _check_watch_order(actual_watches, expected_values):
     """Use difflib to figure out whether the values are in the expected order
     or not.
@@ -71,6 +101,12 @@ class DexExpectWatchValue(CommandBase):
             raise TypeError('expected at least two args')
 
         self.expression = args[0]
+
+        #special_values = DexExpectWatchValue.special_values().values()
+        #for arg in args:
+        #    if arg in special_values:
+        #        print('w00t: {} ({})'.format(arg, args))
+
         self.values = [str(arg) for arg in args[1:]]
         try:
             on_line = kwargs.pop('on_line')
@@ -180,3 +216,14 @@ class DexExpectWatchValue(CommandBase):
                     v for v in self.values if v in
                     [w.value_info.value for w in self.expected_watches]
                 ])
+
+    @classmethod
+    def special_values(cls):
+        return {
+            'any': _SpecialAny,
+            'any_multiple': _SpecialAnyMultiple,
+            'missing': _SpecialMissing,
+            'missing_multiple': _SpecialMissingMultiple,
+            'ignore': _SpecialIgnore,
+            'ignore_multiple': _SpecialIgnore
+        }

@@ -98,7 +98,6 @@ class TestToolBase(ToolBase):
         ])
 
         for subdir in subdirs:
-            test_name = os.path.basename(subdir)
 
             # TODO: read file extensions from the test.cfg file instead so that
             # this isn't just limited to C and C++.
@@ -111,12 +110,12 @@ class TestToolBase(ToolBase):
             options.executable = os.path.join(
                 self.context.working_directory.path, 'tmp.exe')
 
-            self._run_test(subdir, test_name)
+            self._run_test(subdir)
 
         self._handle_results()
 
     @abc.abstractmethod
-    def _run_test(self, subdir, test_name):
+    def _run_test(self, test_dir):
         pass
 
     @abc.abstractmethod

@@ -39,3 +39,7 @@ class CommandBase(object):
     @abc.abstractmethod
     def __call__(self):
         pass
+
+    @classmethod
+    def special_values(cls):
+        return {}
