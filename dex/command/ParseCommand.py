@@ -33,7 +33,6 @@ import os
 import unittest
 
 from dex.command.CommandBase import CommandBase
-from dex.command.SafeEvaluator import SafeEvaluator
 from dex.utils.compatibility import assertRaisesRegex
 from dex.utils.Exceptions import CommandParseError
 
@@ -68,17 +67,7 @@ def _get_valid_commands():
         return commands
 
 
-def _safe_eval(command_text, valid_commands):
-    """Before evaling the command check that it's not doing anything
-    potentially unsafe.  It should be a call only to one of our commands and
-    should only contain literal values as arguments.
-    """
-    safe_evaluator = SafeEvaluator(valid_commands)
-    evaluated_command = safe_evaluator.evaluate_command(command_text)
-    return evaluated_command
-
-
-def old_safe_eval(command_text, valid_commands):  # noqa
+def _safe_eval(command_text, valid_commands):  # noqa
     """Before evaling the command check that it's not doing anything
     potentially unsafe.  It should be a call only to one of our commands and
     should only contain literal values as arguments.
