@@ -102,10 +102,10 @@ class DexExpectWatchValue(CommandBase):
 
         self.expression = args[0]
 
-        #special_values = DexExpectWatchValue.special_values().values()
-        #for arg in args:
-        #    if arg in special_values:
-        #        print('w00t: {} ({})'.format(arg, args))
+        special_values = DexExpectWatchValue.special_values().values()
+        for arg in args:
+            if arg in special_values:
+                print('w00t: {} ({})'.format(arg, args))
 
         self.values = [str(arg) for arg in args[1:]]
         try:

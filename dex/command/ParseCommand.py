@@ -25,13 +25,13 @@ subset of Python is allowed, in order to prevent the possibility of unsafe
 Python code being embedded within DExTer commands.
 """
 
-import ast
 from collections import defaultdict
 import imp
 import inspect
 import os
 import unittest
 
+from dex.command.SafeEvaluator import SafeEvaluator
 from dex.command.CommandBase import CommandBase
 from dex.utils.compatibility import assertRaisesRegex
 from dex.utils.Exceptions import CommandParseError
@@ -67,66 +67,13 @@ def _get_valid_commands():
         return commands
 
 
-def _safe_eval(command_text, valid_commands):  # noqa
+def _safe_eval(command_text, valid_commands):
     """Before evaling the command check that it's not doing anything
     potentially unsafe.  It should be a call only to one of our commands and
     should only contain literal values as arguments.
     """
-    module = ast.parse(command_text)
-    assert isinstance(module, ast.Module), type(module)
-
-    command_name = None
-    special_values = None
-    for node1 in ast.iter_child_nodes(module):
-        if not isinstance(node1, ast.Expr):
-            location = ('', node1.lineno, node1.col_offset + 1, command_text)
-            raise SyntaxError('invalid expression', location)
-
-        for node2 in ast.iter_child_nodes(node1):
-            location = ('', node2.lineno, node2.col_offset + 1, command_text)
-
-            if not isinstance(node2, ast.Call):
-                raise SyntaxError('expected a call', location)
-
-            children = list(ast.iter_child_nodes(node2))
-            try:
-                command_name = children[0].id
-            except AttributeError:
-                location = ('', children[0].lineno, children[0].col_offset + 1,
-                            command_text)
-                raise SyntaxError('invalid syntax', location)
-
-            if command_name not in valid_commands:
-                raise SyntaxError(
-                    'expected a call to {}'.format(', '.join(valid_commands)),
-                    location)
-
-            special_values = valid_commands[command_name].special_values()
-
-            children = children[1:]
-            for i, node3 in enumerate(children):
-                if isinstance(node3, ast.keyword):
-                    node3 = node3.value
-                location = ('', node3.lineno, node3.col_offset + 1,
-                            command_text)
-
-                try:
-                    ast.literal_eval(node3)
-                except ValueError:
-                    if (isinstance(node3, ast.Name)
-                            and node3.id in special_values):
-                        continue
-
-                    raise SyntaxError(
-                        'argument #{}:'
-                        ' expected literal value'.format(i + 1), location)
-
-    globals_ = {command_name: valid_commands[command_name]}
-    globals_.update(special_values)
-
-    # pylint: disable=eval-used
-    return (command_name, eval(command_text, globals_))
-    # pylint: enable=eval-used
+    safe_evaluator = SafeEvaluator(valid_commands)
+    return safe_evaluator.evaluate_command(command_text)
 
 
 def get_command_object(commandIR):
@@ -312,12 +259,12 @@ class TestParseCommand(unittest.TestCase):
                 '''MockCommand1(eval('print("HACKED!")'))''',
         ]:
             with assertRaisesRegex(self, SyntaxError,
-                                   (r'^argument #1: expected literal value'
+                                   (r'^argument #1: expected valid special or literal value'
                                     r' \(, line 1\)$')):
                 _safe_eval(expression, valid_commands)
 
         # unsafe argument 2 (invalid)
         with assertRaisesRegex(self, SyntaxError,
-                               (r'^argument #2: expected literal value'
+                               (r'^argument #2: expected valid special or literal value'
                                 r' \(, line 1\)$')):
             _safe_eval('MockCommand1(0, MockCommand2())', valid_commands)
