@@ -1,6 +1,6 @@
 int main(int argc, const char * argv[]) {
 int result = 0;                           // DexWatch('result')
-  for (size_t ix(0); ix != (argc+4); ++ix)    // DexWatch('result', 'ix')
+  for (int ix(0); ix != (argc+4); ++ix)   // DexWatch('result', 'ix')
     result += ix;                         // DexWatch('result', 'ix')
   return result;                          // DexWatch('result')
 }
