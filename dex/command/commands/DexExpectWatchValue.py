@@ -23,40 +23,74 @@
 """Command for specifying an expected set of values for a particular watch."""
 
 import difflib
+import sys
+import abc
 
 from dex.command.CommandBase import CommandBase
 from dex.heuristic import StepValueInfo
 
 
-class _SpecialAny(object):
-    """ TO BE FILLED IN
-    """
-    pass
+class _BaseMatcher(object):
+    @abc.abstractmethod
+    def check_match(self, expected_node, watch_value):
+        pass
 
-class _SpecialAnyMultiple(object):
-    """ TO BE FILLED IN
-    """
-    pass
 
-class _SpecialMissing(object):
-    """ TO BE FILLED IN
-    """
-    pass
+class _ValueMatcher(_BaseMatcher):
+    def check_match(self, expected_node, watch_value):
+        return expected_node == watch_value
 
-class _SpecialMissingMultiple(object):
-    """ TO BE FILLED IN
-    """
-    pass
 
-class _SpecialIgnore(object):
-    """ TO BE FILLED IN
-    """
-    pass
+class _SpecialAny(_BaseMatcher):
+    def check_match(self, expected_node, watch_value):
+        """Special any can only match once, if the expected node's been seen
+           then it has matched once already.
+        """
+        return not expected_node.seen
 
-class _SpecialIgnoreMultiple(object):
-    """ TO BE FILLED IN
-    """
-    pass
+
+class _SpecialAnyMultiple(_BaseMatcher):
+    def check_match(self, expected_node, watch_value):
+        """any multiple should continue to match until the next expected value
+           is matched.
+        """
+        return not expected_node.RHS.match_watch_value(watch_value)
+
+
+class _ExpectedValue(object):
+    def __init__(self, expected_value, matcher):
+        # Node base values.
+        self.LHS = None
+        self.RHS = None
+        self.value = expected_value
+        self.matcher = matcher
+        self.misordered = False
+        self.seen = False
+
+    def get_RHS(self):
+        return self.RHS
+
+    def get_LHS(self):
+        return self.LHS
+
+    def match_watch_value(self, watch):
+        return self.matcher(watch, self)
+
+
+def _create_expected_node_list(expected_values):
+    PreviousNode = None
+    CurrentNode = None
+    for value in expected_values:
+        if isinstance(value, str):
+            matcher = _ValueMatcher()
+        else:
+            matcher = value
+        
+
+
+def _check_watch_order(actual_watches, expected_values):
+    start = _create_expected_node_list(expected_values)
+
 
 def _check_watch_order(actual_watches, expected_values):
     """Use difflib to figure out whether the values are in the expected order
@@ -103,9 +137,11 @@ class DexExpectWatchValue(CommandBase):
         self.expression = args[0]
 
         special_values = DexExpectWatchValue.special_values().values()
+        special_value_found = False
         for arg in args:
             if arg in special_values:
-                print('w00t: {} ({})'.format(arg, args))
+                special_value_found = True
+                break
 
         self.values = [str(arg) for arg in args[1:]]
         try:
@@ -114,8 +150,11 @@ class DexExpectWatchValue(CommandBase):
             self._to_line = on_line
         except KeyError:
             self._from_line = kwargs.pop('from_line', 1)
-            self._to_line = kwargs.pop('to_line', 999999)
+            self._to_line = kwargs.pop('to_line', sys.maxsize)
         self._require_in_order = kwargs.pop('require_in_order', True)
+        if not self._require_in_order and special_value_found:
+            raise TypeError('cannot use require_in_order'
+                            ' and special values together')
         if kwargs:
             raise TypeError('unexpected named args: {}'.format(
                 ', '.join(kwargs)))
@@ -220,10 +259,10 @@ class DexExpectWatchValue(CommandBase):
     @classmethod
     def special_values(cls):
         return {
-            'any': _SpecialAny,
-            'any_multiple': _SpecialAnyMultiple,
-            'missing': _SpecialMissing,
-            'missing_multiple': _SpecialMissingMultiple,
-            'ignore': _SpecialIgnore,
-            'ignore_multiple': _SpecialIgnore
+            'any': _SpecialAny#####,
+            #'any_multiple': _SpecialAnyMultiple,
+            #'missing': _SpecialMissing,
+            #'missing_multiple': _SpecialMissingMultiple,
+            #'ignore': _SpecialIgnore,
+            #'ignore_multiple': _SpecialIgnore
         }
