@@ -28,16 +28,22 @@ import abc
 
 from dex.command.CommandBase import CommandBase
 from dex.heuristic import StepValueInfo
+from dex.utils.Exceptions import WatchNotFound
 
 
 class _BaseMatcher(object):
     @abc.abstractmethod
-    def check_match(self, expected_node, watch_value):
+    def check_match(self, watch_value):
         pass
 
 
-class _ValueMatcher(_BaseMatcher):
+class _LiteralMatcher(_BaseMatcher):
+    def __init__(self, value):
+        self._value
+
     def check_match(self, expected_node, watch_value):
+        """basic matcher, matches literal values with no special behaviour
+        """
         return expected_node == watch_value
 
 
@@ -58,38 +64,15 @@ class _SpecialAnyMultiple(_BaseMatcher):
 
 
 class _ExpectedValue(object):
-    def __init__(self, expected_value, matcher):
-        # Node base values.
-        self.LHS = None
-        self.RHS = None
-        self.value = expected_value
+    def __init__(self, matcher, LHS, RHS):
+        self._LHS = LHS
+        self._RHS = RHS
         self.matcher = matcher
         self.misordered = False
         self.seen = False
 
-    def get_RHS(self):
-        return self.RHS
-
-    def get_LHS(self):
-        return self.LHS
-
     def match_watch_value(self, watch):
         return self.matcher(watch, self)
-
-
-def _create_expected_node_list(expected_values):
-    PreviousNode = None
-    CurrentNode = None
-    for value in expected_values:
-        if isinstance(value, str):
-            matcher = _ValueMatcher()
-        else:
-            matcher = value
-        
-
-
-def _check_watch_order(actual_watches, expected_values):
-    start = _create_expected_node_list(expected_values)
 
 
 def _check_watch_order(actual_watches, expected_values):
@@ -128,6 +111,9 @@ def _check_watch_order(actual_watches, expected_values):
 
     return differences
 
+
+def _record_watch_value(watch, watch_list):
+    watch_list.append(StepValueInfo(watch.step_index, watch))
 
 class DexExpectWatchValue(CommandBase):
     def __init__(self, *args, **kwargs):
@@ -201,6 +187,76 @@ class DexExpectWatchValue(CommandBase):
     def encountered_values(self):
         return sorted(list(set(self.values) - self._missing_values))
 
+    def _create_expected_value(to_match, previous_match):
+        matcher = to_match
+        if isinstance(previous_value, _SpecialAnyMultiple):
+            previous_value.next_value = to_match
+        if isinstance(to_match, str):
+            matcher = _LiteralMatcher(to_match)
+        return _ExpectedValue(to_match)
+
+
+    def _create_expected_matches(expected_matches):
+        previous_match = None
+        expected_matches = []
+        for match in expected_matches:
+            expected_match = _create_expected_value(match, previous_match)
+            expected_matches.append(expected_match)
+            previous_match = match
+        return expected_matches
+
+
+    def _check_valid_watch(self, watch):
+        if not watch.could_evaluate:
+            _record_watch_value(watch, self.invalid_watches)
+            return
+
+        if watch.is_optimized_away:
+            _record_watch_value(watch, self.optimized_out_watches)
+            return
+
+        if watch.is_irretrievable:
+            _record_watch_value(watch, self.irretrievable_watches)
+            return
+
+    @staticmethod
+    def _find_match(self, watch, expected_arguments, index):
+        new_index = index
+        # look right starting from index.
+        for arg in expected_arguments[index:]:
+            if arg.check_match(watch):
+                return new_index
+            new_index = new_index + 1
+        # look left starting from index.
+        for arg in expected_arguments[:]:
+            if arg.check_match(watch):
+                return new_index
+        raise WatchNotFound
+
+
+    def _check_order(self, new_index, index, watch, expected_arguments):
+        found_argument = expected_arguments[new_index]
+        if new_index == index:
+            _record_watch_value(found_argument, watch, self._expected_watches)
+        elif new_index > index: # after current index.
+            _record_watch_value(found_argument, watch, self._expected_watches)
+        elif new_index < index: # was found before current index.
+            _record_watch_value(found_argument, watch, self._misordered_watches)
+
+
+    def _check_watch_values(self, watch_values, expected_arguments):
+        index = 0
+        for watch in watch_values:
+            is_valid = self._check_valid_watch(watch)
+            if is_valid:
+                try:
+                    new_index = self._find_match(watch, expected_arguments, index)
+                    self._check_order(new_index, index, expected_arguments)
+                    index = new_index
+                except WatchNotFound:
+                    _record_watch_value(watch, self._unexpected_watches)
+
+
     def _handle_watch(self, step, watch):
         self.times_encountered += 1
 
@@ -259,10 +315,6 @@ class DexExpectWatchValue(CommandBase):
     @classmethod
     def special_values(cls):
         return {
-            'any': _SpecialAny#####,
-            #'any_multiple': _SpecialAnyMultiple,
-            #'missing': _SpecialMissing,
-            #'missing_multiple': _SpecialMissingMultiple,
-            #'ignore': _SpecialIgnore,
-            #'ignore_multiple': _SpecialIgnore
+            'any': _SpecialAny,
+            'any_multiple': _SpecialAnyMultiple
         }

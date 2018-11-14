@@ -114,3 +114,10 @@ class InvalidCommandName(Dexception):
     def __init__(self, syntax_error):
         self.syntax_error = syntax_error
         super(InvalidCommandName, self).__init__(syntax_error)
+
+class WatchNotFound(Dexecption):
+    """If an expected watch value wasn't found whilst excuting a
+       DexWatchCommand.
+    """
+    def __init__(self):
+        super(WatchNotFound, self).__init__()
