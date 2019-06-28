@@ -149,6 +149,23 @@ class Heuristic(object):
         except KeyError:
             pass
 
+
+        # Get DexExpectWatchValue results.
+        try:
+            for watch in getattr(
+                    steps, 'commands')['DexExpectWatchType'].command_list:
+                command = get_command_object(watch)
+                command(steps)
+                maximum_possible_penalty = min(3, len(
+                    command.values)) * worst_penalty
+                name, p = self._calculate_expect_watch_penalties(
+                    command, maximum_possible_penalty)
+                self.penalties[name] = PenaltyCommand(p,
+                                                      maximum_possible_penalty)
+        except KeyError:
+            pass
+
+
         # Get the total number of each step kind.
         step_kind_counts = defaultdict(int)
         for step in getattr(steps, 'steps'):
