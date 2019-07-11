@@ -233,11 +233,10 @@ class Heuristic(object):
 
         if 'DexExpectStepOrder' in steps.commands:
             cmds = steps.commands['DexExpectStepOrder']
-            cmds = [(c, get_command_object(c)) for c in cmds]
 
             # Form a list of which line/cmd we _should_ have seen
-            cmd_num_lst = [(x, c.loc.lineno) for c, co in cmds
-                           for x in co.sequence]
+            cmd_num_lst = [(x, c.lineno) for c in cmds
+                               for x in c.sequence]
             # Order them by the sequence number
             cmd_num_lst.sort(key=lambda t: t[0])
             # Strip out sequence key
