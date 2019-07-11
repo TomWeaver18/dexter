@@ -1,7 +1,7 @@
 # DExTer : Debugging Experience Tester
 # ~~~~~~   ~         ~~         ~   ~~
 #
-# Copyright (c) 2018 by SN Systems Ltd., Sony Interactive Entertainment Inc.
+# Copyright (c) 2019 by SN Systems Ltd., Sony Interactive Entertainment Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,21 +20,27 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""Base class for all DExTer commands, where a command is a specific Python
-function that can be embedded into a comment in the source code under test
-which will then be executed by DExTer during debugging.
+"""Command to instruct the debugger to inspect the value of some set of
+expressions on the current source line.
 """
 
-import abc
+from dex.command.CommandBase import CommandBase
 
-class CommandBase(object, metaclass=abc.ABCMeta):
-    def __init__(self):
-        self.path = None
-        self.lineno = None
 
-    def get_label_args(self):
-        return list()
+class DexLabel(CommandBase):
+    def __init__(self, *args):
+        if not args and args.count() > 1:
+            raise TypeError('expected only one argument')
 
-    @abc.abstractmethod
+        for arg in args:
+            if not isinstance(arg, str):
+                raise TypeError('invalid argument type')
+
+        self.label = args[0]
+        super(DexLabel, self).__init__()
+
+    def get_as_pair(self):
+        return (self.label, self.lineno)
+
     def eval(self):
-        pass
+        return self.label

@@ -65,7 +65,7 @@ def _get_valid_commands():
 
 
 def get_command_object(commandIR):
-    """Externally visible version of _safe_eval.  Only returns the Command
+    """Externally visible command evaluator.  Only returns the Command
     object itself.
     """
     valid_commands = _get_valid_commands()
@@ -84,6 +84,16 @@ def _get_command_name(command_raw):
     """
     command_name = command_raw.split('(', 1)[0].rstrip()
     return command_name
+
+
+def resolve_labels(command, commands):
+    """Attempt to resolve any labels in a Dexter Command"""
+    dex_labels = commands["DexLabel"]
+    command_label_args = command.get_label_args()
+    for command_arg in command_label_args:
+        for dex_label in list(dex_labels.values()):
+            if dex_label.path == command.path and dex_label.label == command_arg:
+                command.resolve_label(dex_label.get_as_pair())
 
 
 def _find_all_commands_in_file(path, file_lines, valid_commands):
@@ -113,6 +123,7 @@ def _find_all_commands_in_file(path, file_lines, valid_commands):
             command.path = path
             command.lineno = lineno
             command.raw_text = to_eval
+            resolve_labels(command, commands)
             assert (path, lineno) not in commands[command_name], (
                 command_name, commands[command_name])
             commands[command_name][path, lineno] = command

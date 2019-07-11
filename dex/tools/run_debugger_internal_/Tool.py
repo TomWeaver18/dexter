@@ -33,6 +33,8 @@ from dex.utils import Timer
 from dex.utils.Exceptions import DebuggerException, Error
 from dex.utils.ReturnCode import ReturnCode
 
+from dex.command.ParseCommand import _get_valid_commands
+
 
 class Tool(ToolBase):
     def __init__(self, *args, **kwargs):
@@ -49,6 +51,7 @@ class Tool(ToolBase):
             'pickled_options', type=str, help='pickled options file')
 
     def handle_options(self, defaults):
+        _get_valid_commands()      
         with open(self.context.options.dextIR_path, 'rb') as fp:
             self.dextIR = pickle.load(fp)
 

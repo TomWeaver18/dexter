@@ -150,10 +150,7 @@ def _get_command_infos(context):
         for command in commands[command_type].values():
             if command_type not in command_infos:
                 command_infos[command_type] = []
-
-            loc = LocIR(path=command.path, lineno=command.lineno, column=None)
-            command_infos[command_type].append(
-                CommandIR(loc=loc, raw_text=command.raw_text))
+            command_infos[command_type].append(command)
     return OrderedDict(command_infos)
 
 
