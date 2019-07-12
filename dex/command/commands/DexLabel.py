@@ -28,15 +28,12 @@ from dex.command.CommandBase import CommandBase
 
 
 class DexLabel(CommandBase):
-    def __init__(self, *args):
-        if not args and args.count() > 1:
-            raise TypeError('expected only one argument')
+    def __init__(self, label):
 
-        for arg in args:
-            if not isinstance(arg, str):
-                raise TypeError('invalid argument type')
+        if not isinstance(label, str):
+            raise TypeError('invalid argument type')
 
-        self.label = args[0]
+        self.label = label
         super(DexLabel, self).__init__()
 
     def get_as_pair(self):
