@@ -30,7 +30,7 @@ import sys
 from tempfile import NamedTemporaryFile
 
 from dex.command import find_all_commands
-from dex.dextIR import CommandIR, DextIR, LocIR
+from dex.dextIR import DextIR, LocIR
 from dex.utils import get_root_directory, Timer
 from dex.utils.Environment import is_native_windows
 from dex.utils.Exceptions import CommandParseError, DebuggerException

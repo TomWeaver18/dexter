@@ -33,6 +33,19 @@ import os
 from dex.command.CommandBase import CommandBase
 from dex.utils.Exceptions import CommandParseError
 
+def import_command_modules():
+    commands_directory = os.path.join(
+        os.path.dirname(__file__), 'commands')
+    potential_modules = [
+        os.path.splitext(f)[0] for f in os.listdir(commands_directory)
+    ]
+    for module in potential_modules:
+        try:
+            module_info = imp.find_module(module, [commands_directory])
+            module = imp.load_module(module, *module_info)
+        except ImportError:
+            continue
+
 
 def _get_valid_commands():
     """Search the commands subdirectory for any classes which are subclasses of

@@ -51,7 +51,7 @@ class Tool(ToolBase):
             'pickled_options', type=str, help='pickled options file')
 
     def handle_options(self, defaults):
-        _get_valid_commands()      
+        _get_valid_commands()
         with open(self.context.options.dextIR_path, 'rb') as fp:
             self.dextIR = pickle.load(fp)
 
