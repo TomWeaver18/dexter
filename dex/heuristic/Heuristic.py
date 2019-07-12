@@ -236,7 +236,7 @@ class Heuristic(object):
 
             # Form a list of which line/cmd we _should_ have seen
             cmd_num_lst = [(x, c.lineno) for c in cmds
-                               for x in c.sequence]
+                                         for x in c.sequence]
             # Order them by the sequence number
             cmd_num_lst.sort(key=lambda t: t[0])
             # Strip out sequence key
