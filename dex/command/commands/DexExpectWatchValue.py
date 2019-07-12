@@ -128,25 +128,21 @@ class DexExpectWatchValue(CommandBase):
 
     def get_label_args(self):
         label_list = []
-        if self._has_labels():
+        if self.has_labels():
             label_list = [self._to_line, self._from_line]
         return label_list
 
     def resolve_label(self, label_line_pair):
-        # case where on_online is set, to and from line become equal.
-        if self._to_line == self._from_line:
-            if self._to_line == label_line_pair[0]:
-                self._to_line = label_line_pair[1]
-                self._from_line = label_line_pair[1]
-                return
-
+        # from_line and to_line could have the same label.
         if self._to_line == label_line_pair[0]:
             self._to_line = label_line_pair[1]
-        else:
-            if self._from_line == label_line_pair[0]:
-                self._from_line = label_line_pair[1]
+        if self._from_line == label_line_pair[0]:
+             self._from_line = label_line_pair[1]
 
-    def _has_labels(self):
+    def has_labels(self):
+        """Labels for _from_line and _to_line are any none to int convertable
+           string.
+        """
         try:
             int(self._from_line)
             int(self._to_line)

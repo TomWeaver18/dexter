@@ -87,13 +87,21 @@ def _get_command_name(command_raw):
 
 
 def resolve_labels(command, commands):
-    """Attempt to resolve any labels in a Dexter Command"""
+    """Attempt to resolve any labels in command"""
     dex_labels = commands["DexLabel"]
     command_label_args = command.get_label_args()
     for command_arg in command_label_args:
         for dex_label in list(dex_labels.values()):
             if dex_label.path == command.path and dex_label.label == command_arg:
                 command.resolve_label(dex_label.get_as_pair())
+    # labels for command should be resolved by this point.
+    if command.has_labels():
+        syntax_error = SyntaxError()
+        syntax_error.filename = command.path
+        syntax_error.lineno = command.lineno
+        syntax_error.offset = 0
+        syntax_error.text = command.__str__
+        raise syntax_error
 
 
 def _find_all_commands_in_file(path, file_lines, valid_commands):

@@ -35,6 +35,9 @@ class CommandBase(object, metaclass=abc.ABCMeta):
     def get_label_args(self):
         return list()
 
+    def has_labels(self):
+        return False
+
     @abc.abstractmethod
     def eval(self):
         pass
