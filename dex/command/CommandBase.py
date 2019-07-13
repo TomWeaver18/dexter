@@ -32,6 +32,11 @@ class CommandBase(object, metaclass=abc.ABCMeta):
         self.path = None
         self.lineno = None
 
+    @staticmethod
+    @abc.abstractstaticmethod
+    def get_name():
+        pass
+
     @abc.abstractmethod
     def eval(self):
         pass
