@@ -38,6 +38,11 @@ class CommandBase(object, metaclass=abc.ABCMeta):
     def has_labels(self):
         return False
 
+    @staticmethod
+    @abc.abstractstaticmethod
+    def get_name():
+        pass
+
     @abc.abstractmethod
     def eval(self):
         pass
