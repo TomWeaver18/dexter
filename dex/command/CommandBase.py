@@ -41,8 +41,16 @@ class CommandBase(object, metaclass=abc.ABCMeta):
     @staticmethod
     @abc.abstractstaticmethod
     def get_name():
-        pass
+        """This abstract method is usually implemented in subclasses as:
+           return __class__.__name__
+        """
 
     @abc.abstractmethod
     def eval(self):
         pass
+
+    def get_subcommands() -> dict:
+        """Returns a dictionary of subcommands in the form {name: command} or
+        None if no subcommands are required.
+        """
+        return None

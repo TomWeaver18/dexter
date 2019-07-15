@@ -28,7 +28,6 @@ import sys
 import time
 import traceback
 
-from dex.command import get_command_object
 from dex.dextIR import DebuggerIR
 from dex.utils.Exceptions import DebuggerException
 from dex.utils.Exceptions import NotYetLoadedDebuggerException

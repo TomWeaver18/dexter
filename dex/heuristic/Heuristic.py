@@ -118,8 +118,6 @@ class Heuristic(object):
         self.context = context
         self.penalties = {}
 
-        from dex.command.ParseCommand import get_command_object
-
         worst_penalty = max([
             self.penalty_variable_optimized, self.penalty_irretrievable,
             self.penalty_not_evaluatable, self.penalty_incorrect_values,
@@ -181,7 +179,7 @@ class Heuristic(object):
                 maximum_possible_penalty = max(command.count * 2, 1)
                 p = abs(command.count - step_kind_counts[command.name])
                 actual_penalty = min(p, maximum_possible_penalty)
-                key = (command.name
+                key = ('{}'.format(command.name)
                        if actual_penalty else '<g>{}</>'.format(command.name))
                 penalties[key] = [PenaltyInstance(p, actual_penalty)]
                 maximum_possible_penalty_all += maximum_possible_penalty
@@ -198,7 +196,6 @@ class Heuristic(object):
             ureachs = [
                 s for s in steps.steps if 'DexUnreachable' in s.watches.keys()
             ]
-            assert len(ureachs) <= len(cmds)
 
             # There's no need to match up cmds with the actual watches
             upen = self.penalty_unreachable
