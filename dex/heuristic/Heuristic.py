@@ -127,8 +127,7 @@ class Heuristic(object):
 
         # Get DexExpectWatchValue results.
         try:
-            for watch in steps.commands["DexExpectWatchValue"]:
-                command = watch
+            for command in steps.commands['DexExpectWatchValue']:
                 command.eval(steps)
                 maximum_possible_penalty = min(3, len(
                     command.values)) * worst_penalty
@@ -142,7 +141,7 @@ class Heuristic(object):
         try:
             penalties = defaultdict(list)
             maximum_possible_penalty_all = 0
-            for expect_state in steps.commands["DexExpectProgramState"]:
+            for expect_state in steps.commands['DexExpectProgramState']:
                 success = expect_state.eval(steps)
                 p = 0 if success else self.penalty_incorrect_program_state
 

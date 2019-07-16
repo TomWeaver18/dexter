@@ -141,11 +141,6 @@ class DexExpectWatchValue(CommandBase):
     def encountered_values(self):
         return sorted(list(set(self.values) - self._missing_values))
 
-    def get_label_args(self):
-        label_list = []
-        if self.has_labels():
-            label_list = [self._to_line, self._from_line]
-        return label_list
 
     def resolve_label(self, label_line_pair):
         # from_line and to_line could have the same label.
@@ -155,17 +150,19 @@ class DexExpectWatchValue(CommandBase):
              self._from_line = label_line_pair[1]
 
     def has_labels(self):
-        """Labels for _from_line and _to_line are any none to int convertable
-           string.
-        """
+        return len(self.get_label_args()) > 0
+
+    def get_label_args(self):
+        label_list = []
         try:
             int(self._from_line)
+        except ValueError:
+            label_list.append(self._from_line)
+        try:
             int(self._to_line)
         except ValueError:
-            return True
-        else:
-            return False
-
+            label_list.append(self._to_line)
+        return label_list
 
     def _handle_watch(self, step, watch):
         self.times_encountered += 1

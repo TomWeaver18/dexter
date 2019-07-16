@@ -20,8 +20,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""Command to instruct the debugger to inspect the value of some set of
-expressions on the current source line.
+"""Command used to give a line in a test a named psuedonym. Every DexLabel has
+   a line number and Label string component.
 """
 
 from dex.command.CommandBase import CommandBase
@@ -33,11 +33,15 @@ class DexLabel(CommandBase):
         if not isinstance(label, str):
             raise TypeError('invalid argument type')
 
-        self.label = label
+        self._label = label
         super(DexLabel, self).__init__()
 
     def get_as_pair(self):
-        return (self.label, self.lineno)
+        return (self._label, self.lineno)
+
+    @staticmethod
+    def get_name():
+        return __class__.__name__
 
     def eval(self):
-        return self.label
+        return self._label
