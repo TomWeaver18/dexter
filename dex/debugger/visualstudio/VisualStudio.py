@@ -229,6 +229,9 @@ class VisualStudio(DebuggerBase, metaclass=abc.ABCMeta):  # pylint: disable=abst
         could_evaluate = (result.IsValidValue or is_optimized_away
                           or is_irretrievable)
 
+#        import pdb
+#        pdb.set_trace()
+
         return ValueIR(
             expression=expression,
             value=value,
