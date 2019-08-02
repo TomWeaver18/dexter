@@ -1,3 +1,14 @@
+// Purpose:
+//      Check that \DexExpectWatchType applies no penalties when expected
+//      types are found.
+//
+// REQUIRES: linux, clang, lldb
+//
+// RUN: dexter.py test --fail-lt 1.0 -w \
+// RUN:     --builder clang --debugger lldb --cflags="-O0 -g" -- %S \
+// RUN:     | FileCheck %s
+// CHECK: expect_watch_type:
+
 template<class T>
 class Doubled {
 public:
@@ -38,3 +49,4 @@ int main() {
 // DexExpectWatchType('myDouble', 'Doubled<double>', from_line='main_start', to_line='main_end')
 // DexExpectWatchType('staticallyDoubledInt', 'int', from_line='main_start', to_line='main_end')
 // DexExpectWatchType('staticallyDoubledDouble', 'double', from_line='main_start', to_line='main_end')
+
