@@ -79,7 +79,6 @@ class LLDB(DebuggerBase):
             args = [self.lldb_executable, '-P']
             pythonpath = check_output(
                 args, stderr=STDOUT).rstrip().decode('utf-8')
-            pythonpath = '/home/clangbox/dev/upstream_llvm_git/build/lib/python3.6/site-packages'
         except CalledProcessError as e:
             raise LoadDebuggerException(str(e), sys.exc_info())
         except OSError as e:
