@@ -39,7 +39,6 @@ class CommandBase(object, metaclass=abc.ABCMeta):
     def has_labels(self):
         return False
 
-    @staticmethod
     @abc.abstractstaticmethod
     def get_name():
         """This abstract method is usually implemented in subclasses as:
@@ -61,7 +60,6 @@ class CommandBase(object, metaclass=abc.ABCMeta):
             defined in Heuristic.__init__() so a consitent return type between
             commands is not enforced.
         """
-        pass
 
     @staticmethod
     def get_subcommands() -> dict:

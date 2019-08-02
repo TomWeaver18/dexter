@@ -1,6 +1,6 @@
 // Purpose:
-//      Check that \DexExpectWatchType applies no penalties when expected
-//      types are found.
+//      Check that \DexExpectWatchType applies penalties when expected
+//      types are not found and unexpected types are.
 //
 // REQUIRES: linux, clang, lldb
 //

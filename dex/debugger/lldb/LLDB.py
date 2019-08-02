@@ -240,7 +240,6 @@ class LLDB(DebuggerBase):
         # attempt to find expression as a variable, if found, take the variable
         # obj's type information as it's 'usually' more accurate.
         var_result = self._thread.GetFrameAtIndex(frame_idx).FindVariable(expression)
-        type_name = str()
         if str(var_result.error) == 'success':
             type_name = var_result.type.GetDisplayTypeName()
         else:

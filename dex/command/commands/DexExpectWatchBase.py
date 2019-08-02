@@ -21,8 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""ExpectWatch base class, holds logic for how to build and process expected
- watche commands.
+"""DexExpectWatch base class, holds logic for how to build and process expected
+ watch commands.
 """
 
 import abc
@@ -113,16 +113,9 @@ class DexExpectWatchBase(CommandBase):
         return [label for label in (self._from_line, self._to_line)
                       if isinstance(label, str)]
 
-    @staticmethod
-    @abc.abstractstaticmethod
-    def get_name():
-        """This abstract method is usually implemented in subclasses as:
-        return __class__.__name__
-        """
-
     @abc.abstractmethod
-    def _expected_field(self, watch):
-        """Return attribute from watch that we're most interested in.
+    def _get_expected_field(self, watch):
+        """Return a field from watch that this ExpectWatch command is checking.
         """
 
     def _handle_watch(self, step_info):
@@ -196,7 +189,7 @@ class DexExpectWatchBase(CommandBase):
                 except KeyError:
                     pass
                 else:
-                    expected_field = self._expected_field(watch)
+                    expected_field = self._get_expected_field(watch)
                     step_info = StepValueInfo(step.step_index, watch, 
                                               expected_field)
                     self._handle_watch(step_info)

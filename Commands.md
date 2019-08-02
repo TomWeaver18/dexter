@@ -3,6 +3,7 @@
 * [DexExpectProgramState](Commands.md#DexExpectProgramState)
 * [DexExpectStepKind](Commands.md#DexExpectStepKind)
 * [DexExpectStepOrder](Commands.md#DexExpectStepOrder)
+* [DexExpectWatchType](Commands.md#DexExpectWatchType)
 * [DexExpectWatchValue](Commands.md#DexExpectWatchValue)
 * [DexUnreachable](Commands.md#DexUnreachable)
 * [DexWatch](Commands.md#DexWatch)
@@ -84,8 +85,8 @@ Expect the line every `DexExpectStepOrder` is found on to be stepped on in
 
 
 ---
-## DexExpectWatchValue
-    DexExpectWatchValue(expr, *types [,**from_line=1][,**to_line=Max]
+## DexExpectWatchType
+    DexExpectWatchType(expr, *types [,**from_line=1][,**to_line=Max]
                         [,**on_line][,**require_in_order=True])
 
     Args:
