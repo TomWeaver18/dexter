@@ -48,11 +48,11 @@ int main(int argc, const char * argv[]) {
 // DexExpectWatchValue('bar.b', 0, 10, from_line='initABC_str', to_line='initABC_end')
 // DexExpectWatchValue('bar.c', 0, from_line='initABC_str', to_line='initABC_end')
 
-// DexExpectWatchValue('bar.a', 6, from_line='initData_str', to_line='initData_str')
-// DexExpectWatchValue('bar.b', 10, from_line='initData_str', to_line='initData_str')
-// DexExpectWatchValue('bar.c', 256, from_line='initData_str', to_line='initData_str')
-// DexExpectWatchValue('bar.data[1]', 0, 1, from_line='initData_str', to_line='initData_str')
-// DexExpectWatchValue('bar.data[6]', 0, 6, from_line='initData_str', to_line='initData_str')
+// DexExpectWatchValue('bar.a', 6, from_line='initData_str', to_line='initData_end')
+// DexExpectWatchValue('bar.b', 10, from_line='initData_str', to_line='initData_end')
+// DexExpectWatchValue('bar.c', 256, from_line='initData_str', to_line='initData_end')
+// DexExpectWatchValue('bar.data[1]', 0, 1, from_line='initData_str', to_line='initData_end')
+// DexExpectWatchValue('bar.data[6]', 0, 6, from_line='initData_str', to_line='initData_end')
 
 // DexExpectWatchValue('bar.a', 6, from_line='makeSomePointers_str', to_line='makeSomePointers_end')
 // DexExpectWatchValue('bar.b', 10, from_line='makeSomePointers_str', to_line='makeSomePointers_end')
