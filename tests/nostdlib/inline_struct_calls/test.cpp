@@ -20,12 +20,6 @@ inline void initData(foo & bar, const int arg) {
   }
 }
 
-int doSomeMath(foo bar, const int arg) {
-  int someMath = bar.a + bar.b +                        // DexLabel('math_str')
-                 bar.data[arg + 1] + bar.data[arg + 4];
-  return someMath;                                      // DexLabel('math_end')
-}
-
 inline int makeSomePointers(foo & bar) {
   if (bar.a) {                  // DexLabel('makeSomePointers_str')
     gpAwk = &bar;
@@ -37,13 +31,11 @@ inline int makeSomePointers(foo & bar) {
 int main(int argc, const char * argv[]) {
   argc -= 1;          // DexLabel('main_str')
   foo bar;
-  //initABC(bar, argc);
-  //initData(bar, argc);
-  //makeSomePointers(bar);
-  int mainThing = doSomeMath(bar, argc);
+  initABC(bar, argc);
+  initData(bar, argc);
+  makeSomePointers(bar);
 
-  return mainThing +
-         bar.a +
+  return bar.a +
          bar.b +
          bar.c +
          bar.data[1] +
@@ -61,12 +53,6 @@ int main(int argc, const char * argv[]) {
 // DexExpectWatchValue('bar.c', 256, from_line='initData_str', to_line='initData_str')
 // DexExpectWatchValue('bar.data[1]', 0, 1, from_line='initData_str', to_line='initData_str')
 // DexExpectWatchValue('bar.data[6]', 0, 6, from_line='initData_str', to_line='initData_str')
-
-// DexExpectWatchValue('bar.a', 6, from_line='math_str', to_line='math_end')
-// DexExpectWatchValue('bar.b', 10, from_line='math_str', to_line='math_end')
-// DexExpectWatchValue('bar.c', 256, from_line='math_str', to_line='math_end')
-// DexExpectWatchValue('bar.data[1]', 1, from_line='math_str', to_line='math_end')
-// DexExpectWatchValue('bar.data[6]', 6, from_line='math_str', to_line='math_end')
 
 // DexExpectWatchValue('bar.a', 6, from_line='makeSomePointers_str', to_line='makeSomePointers_end')
 // DexExpectWatchValue('bar.b', 10, from_line='makeSomePointers_str', to_line='makeSomePointers_end')
