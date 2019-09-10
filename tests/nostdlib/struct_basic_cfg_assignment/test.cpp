@@ -12,7 +12,7 @@ int main(const int argc, const char * argv[]) {
   return b.a;   // DexLabel('end')
 }
 
-// DexExpectWatchType('a', 'foo', from_line='assign_a', to_line='ret')
-// DexExpectWatchType('b', 'foo', from_line='assign_a', to_line='ret')
-// DexExpectWatchValue('b.a', 0, 1, from_line='assign_a', to_line='ret')
-// DexExpectWatchValue('b.b', 0, 2, from_line='assign_a', to_line='ret')
+// DexExpectWatchType('a', 'foo', from_line='str', to_line='end')
+// DexExpectWatchType('b', 'foo', from_line='str', to_line='end')
+// DexExpectWatchValue('b.a', 0, 1, from_line='str', to_line='end')
+// DexExpectWatchValue('b.b', 0, 2, from_line='str', to_line='end')
