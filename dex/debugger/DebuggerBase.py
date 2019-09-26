@@ -28,8 +28,8 @@ import sys
 import time
 import traceback
 
-
 from dex.dextIR import DebuggerIR, ValueIR
+from dex.command.commands.DexLimitSteps import DexLimitSteps
 from dex.utils.Exceptions import DebuggerException
 from dex.utils.Exceptions import NotYetLoadedDebuggerException
 from dex.utils.ReturnCode import ReturnCode
@@ -57,7 +57,7 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         try:
             self._custom_init()
             self.clear_breakpoints()
-            self.add_breakpoints()
+            #self.add_breakpoints()
         except DebuggerException:
             self._loading_error = sys.exc_info()
         return self
@@ -133,7 +133,73 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         """
         return name
 
+    def get_conditional_break_points(self):
+        limit_step_commands = self.steps.commands[DexLimitSteps.get_name()]
+
+        unique_files = set()
+        for cmd in limit_step_commands:
+            unique_files.add(cmd.path)
+
+        conditional_break_points = dict()
+        for unique_file in unique_files:
+            conditional_break_points[unique_file] = set()
+
+        for cmd in limit_step_commands:
+            conditional_break_points[cmd.path].add(cmd.from_line)
+
+        return conditional_break_points
+
+    def map_file_and_lineno_to_conditional_expressions(self):
+        limit_step_commands = self.steps.commands[DexLimitSteps.get_name()]
+
+        start_line_to_expression = dict()
+        for cmd in limit_step_commands:
+            start_line_to_expression[(cmd.path, cmd.from_line)] = list()
+
+        for cmd in limit_step_commands:
+            thang = start_line_to_expression[(cmd.path, cmd.from_line)]
+            thang.append((cmd.eval, cmd.values))
+
+        return start_line_to_expression
+
+    def set_conditional_break_points(self, conditional_break_points):
+        for source_file in conditional_break_points:
+            for lineno in conditional_break_points[source_file]:
+                self.add_breakpoint(source_file, lineno)
+
+    def different_stepping_behaviour(self):
+        self.steps.clear_steps()
+        self.launch()
+
+        conditional_break_points = self.get_conditional_break_points()
+        conditional_expressions = self.map_file_and_lineno_to_conditional_expressions()
+
+        import pdb
+
+        self.set_conditional_break_points(conditional_break_points)
+
+        max_steps = self.context.options.max_steps
+        for _ in range(max_steps):
+            while self.is_running:
+                pass
+            
+            if self.is_finished:
+                pdb.set_trace()
+                break
+
+            self.step_index += 1
+            step_info = self.get_step_info()
+            pdb.set_trace()
+            self.go()
+            time.sleep(self.context.options.pause_between_steps)
+        else:
+            raise DebuggerException(
+                'maximum number of steps reached ({})'.format(max_steps))
+
     def start(self):
+        #self.different_stepping_behaviour()
+        #if True:
+        #  return
         self.steps.clear_steps()
         self.launch()
 
@@ -155,17 +221,22 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 self._update_step_watches(step_info)
                 self.steps.new_step(self.context, step_info)
 
-            if (step_info.current_frame
-                    and (step_info.current_location.path in
-                         self.context.options.source_files)):
-                self.step()
-            else:
-                self.go()
+            import pdb
+            pdb.set_trace()
+            self.go()
+
+            #if (step_info.current_frame
+            #        and (step_info.current_location.path in
+            #             self.context.options.source_files)):
+            #    self.step()
+            #else:
+            #    self.go()
 
             time.sleep(self.context.options.pause_between_steps)
         else:
             raise DebuggerException(
                 'maximum number of steps reached ({})'.format(max_steps))
+
     @abc.abstractmethod
     def _load_interface(self):
         pass

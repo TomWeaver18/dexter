@@ -173,6 +173,9 @@ def get_debugger_steps(context):
     with Timer('parsing commands'):
         try:
             step_collection.commands = _get_command_infos(context)
+            if 'DexLimitSteps' in step_collection.commands:
+                step_collection.limit_steps = True
+
         except CommandParseError as e:
             msg = 'parser error: <d>{}({}):</> {}\n{}\n{}\n'.format(
                 e.filename, e.lineno, e.info, e.src, e.caret)

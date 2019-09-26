@@ -120,6 +120,7 @@ class VisualStudio(DebuggerBase, metaclass=abc.ABCMeta):  # pylint: disable=abst
         except AttributeError:
             return None
 
+
     def clear_breakpoints(self):
         for bp in self._debugger.Breakpoints:
             bp.Delete()
