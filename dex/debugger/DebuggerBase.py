@@ -44,6 +44,9 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         self._loading_error = NotYetLoadedDebuggerException()
         self.watches = set()
 
+        self.conditional_break_points = None
+        self.conditional_expressions = None
+
         try:
             self._interface = self._load_interface()
             self.has_loaded = True
@@ -55,15 +58,8 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
 
     def __enter__(self):
         try:
-            import pdb
-            pdb.set_trace()
             self._custom_init()
             self.clear_breakpoints()
-
-            #conditional_break_points = self.get_conditional_break_points()
-            #conditional_expressions = self.map_file_and_lineno_to_conditional_expressions()
-            #self.set_conditional_break_points(conditional_break_points)
-
             self.add_breakpoints()
         except DebuggerException:
             self._loading_error = sys.exc_info()
@@ -110,11 +106,19 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         return tb
 
     def add_breakpoints(self):
-        for s in self.context.options.source_files:
-            with open(s, 'r') as fp:
-                num_lines = len(fp.readlines())
-            for line in range(1, num_lines + 1):
-                self.add_breakpoint(s, line)
+        if self.steps.limit_steps:
+            self.create_limited_breakpoint_set()
+        else:
+            for s in self.context.options.source_files:
+                with open(s, 'r') as fp:
+                    num_lines = len(fp.readlines())
+                for line in range(1, num_lines + 1):
+                    self.add_breakpoint(s, line)
+
+    def create_limited_breakpoint_set(self):
+        self.conditional_break_points = self.get_conditional_break_points()
+        self.conditional_expressions = self.map_file_and_lineno_to_conditional_expressions()
+        self.set_conditional_break_points(self.conditional_break_points)
 
     def _update_step_watches(self, step_info):
         loc = step_info.current_location
@@ -178,12 +182,8 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         self.steps.clear_steps()
         self.launch()
 
-        conditional_break_points = self.get_conditional_break_points()
-        conditional_expressions = self.map_file_and_lineno_to_conditional_expressions()
-
         import pdb
-
-        self.set_conditional_break_points(conditional_break_points)
+        pdb.set_trace()
 
         max_steps = self.context.options.max_steps
         for _ in range(max_steps):
@@ -191,16 +191,14 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 pass
             
             if self.is_finished:
-                pdb.set_trace()
                 break
 
             if self.is_breaked:
-                pdb.set_trace()
+                self.conditional_expressions
                 pass
 
             self.step_index += 1
             step_info = self.get_step_info()
-            pdb.set_trace()
             self.go()
             time.sleep(self.context.options.pause_between_steps)
         else:
@@ -208,9 +206,9 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 'maximum number of steps reached ({})'.format(max_steps))
 
     def start(self):
-#        self.different_stepping_behaviour()
-#        if True:
-#          return
+        self.different_stepping_behaviour()
+        if True:
+          return
         self.steps.clear_steps()
         self.launch()
 
