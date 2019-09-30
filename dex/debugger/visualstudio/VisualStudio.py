@@ -199,6 +199,10 @@ class VisualStudio(DebuggerBase, metaclass=abc.ABCMeta):  # pylint: disable=abst
         return self._mode == VisualStudio.dbgRunMode
 
     @property
+    def is_breaked(self):
+        return self._mode == VisualStudio.dbgBreakMode
+
+    @property
     def is_finished(self):
         return self._mode == VisualStudio.dbgDesignMode
 

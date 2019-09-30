@@ -55,9 +55,16 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
 
     def __enter__(self):
         try:
+            import pdb
+            pdb.set_trace()
             self._custom_init()
             self.clear_breakpoints()
-            #self.add_breakpoints()
+
+            #conditional_break_points = self.get_conditional_break_points()
+            #conditional_expressions = self.map_file_and_lineno_to_conditional_expressions()
+            #self.set_conditional_break_points(conditional_break_points)
+
+            self.add_breakpoints()
         except DebuggerException:
             self._loading_error = sys.exc_info()
         return self
@@ -187,6 +194,10 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 pdb.set_trace()
                 break
 
+            if self.is_breaked:
+                pdb.set_trace()
+                pass
+
             self.step_index += 1
             step_info = self.get_step_info()
             pdb.set_trace()
@@ -197,9 +208,9 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 'maximum number of steps reached ({})'.format(max_steps))
 
     def start(self):
-        #self.different_stepping_behaviour()
-        #if True:
-        #  return
+#        self.different_stepping_behaviour()
+#        if True:
+#          return
         self.steps.clear_steps()
         self.launch()
 
@@ -221,16 +232,14 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 self._update_step_watches(step_info)
                 self.steps.new_step(self.context, step_info)
 
-            import pdb
-            pdb.set_trace()
-            self.go()
-
-            #if (step_info.current_frame
-            #        and (step_info.current_location.path in
-            #             self.context.options.source_files)):
-            #    self.step()
-            #else:
-            #    self.go()
+            if (step_info.current_frame
+                    and (step_info.current_location.path in
+                         self.context.options.source_files)):
+                self.step()
+            else:
+                import pdb
+                pdb.set_trace()
+                self.go()
 
             time.sleep(self.context.options.pause_between_steps)
         else:
@@ -291,6 +300,10 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
 
     @abc.abstractproperty
     def is_running(self):
+        pass
+
+    @abc.abstractproperty
+    def is_breaked(self):
         pass
 
     @abc.abstractproperty
