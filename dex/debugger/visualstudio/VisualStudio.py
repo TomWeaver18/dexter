@@ -128,6 +128,10 @@ class VisualStudio(DebuggerBase, metaclass=abc.ABCMeta):  # pylint: disable=abst
     def add_breakpoint(self, file_, line):
         self._debugger.Breakpoints.Add('', file_, line)
 
+    @property
+    def last_breakpoint_hit(self):
+        return self._debugger.BreakPointLastHit
+
     def launch(self):
         self.step()
 

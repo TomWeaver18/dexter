@@ -119,6 +119,7 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         self.conditional_break_points = self.get_conditional_break_points()
         self.conditional_expressions = self.map_file_and_lineno_to_conditional_expressions()
         self.set_conditional_break_points(self.conditional_break_points)
+        self.set_limited_range_break_points()
 
     def _update_step_watches(self, step_info):
         loc = step_info.current_location
@@ -169,7 +170,7 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
 
         for cmd in limit_step_commands:
             thang = start_line_to_expression[(cmd.path, cmd.from_line)]
-            thang.append((cmd.eval, cmd.values))
+            thang.append((cmd.eval, cmd.values, cmd.from_line, cmd.to_line))
 
         return start_line_to_expression
 
@@ -178,12 +179,25 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
             for lineno in conditional_break_points[source_file]:
                 self.add_breakpoint(source_file, lineno)
 
+    def create_one_use_range(self, file_path, from_line, to_line):
+        for line in range(from_line, to_line):
+            self.add_breakpoint(file_path, line)
+
+    def conditional_hit(self, bp):
+        expr_key = (bp.File, bp.Line)
+        expr_set = self.conditional_expressions[expr_key]
+        for expr in expr_set:
+            to_eval, expected_vals, from_line, to_line = expr
+            valueIR = self.evaluate_expression(to_eval)
+            value = valueIR.value
+            for expected_val in expected_vals:
+                if value == expected_val:
+                    self.create_one_use_range(bp.File, from_line, to_line)
+        return
+
     def different_stepping_behaviour(self):
         self.steps.clear_steps()
         self.launch()
-
-        import pdb
-        pdb.set_trace()
 
         max_steps = self.context.options.max_steps
         for _ in range(max_steps):
@@ -194,8 +208,9 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 break
 
             if self.is_breaked:
-                self.conditional_expressions
-                pass
+                last_bp_hit = self.last_breakpoint_hit
+                if (last_bp_hit is not None) and (self.conditional_hit(last_bp_hit)):
+                    pass
 
             self.step_index += 1
             step_info = self.get_step_info()
@@ -270,6 +285,10 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
 
     @abc.abstractproperty
     def version(self):
+        pass
+
+    @abc.abstractproperty
+    def last_breakpoint_hit(self):
         pass
 
     @abc.abstractmethod
