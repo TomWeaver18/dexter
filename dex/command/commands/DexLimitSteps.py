@@ -31,15 +31,8 @@ class DexLimitSteps(CommandBase):
     def __init__(self, *args, **kwargs):
         self.expression = args[0]
         self.values = [str(arg) for arg in args[1:]]
-        try:
-            on_line = kwargs.pop('on_line')
-            self.from_line = on_line
-            self.to_line = on_line
-        except KeyError:
-            self.from_line = kwargs.pop('from_line', 1)
-            self.to_line = kwargs.pop('to_line', 999999)
-        self._require_in_order = kwargs.pop('require_in_order', True)
-
+        self.from_line = kwargs.pop('from_line', 1)
+        self.to_line = kwargs.pop('to_line', 999999)
         if kwargs:
             raise TypeError('unexpected named args: {}'.format(
                 ', '.join(kwargs)))

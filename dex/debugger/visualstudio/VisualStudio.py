@@ -128,6 +128,32 @@ class VisualStudio(DebuggerBase, metaclass=abc.ABCMeta):  # pylint: disable=abst
     def add_breakpoint(self, file_, line):
         self._debugger.Breakpoints.Add('', file_, line)
 
+    def enable_breakpoints(self, breakpoints_to_enable):
+        debugger_break_points = self._debugger.BreakPoints
+        for ix in range(debugger_break_points.Count):
+            bp_file = debugger_break_points[ix].File
+            bp_line = debugger_break_points[ix].FileLine
+            try:
+                key = (bp_file, bp_line)
+                breakpoints_to_enable[key]
+            except KeyError:
+                pass
+            else:
+                debugger_break_points[ix].Enabled = True
+
+    def disable_breakpoints(self, breakpoints_to_enable):
+        debugger_break_points = self._debugger.BreakPoints
+        for ix in range(debugger_break_points.Count):
+            bp_file = debugger_break_points[ix].File
+            bp_line = debugger_break_points[ix].FileLine
+            try:
+                key = (bp_file, bp_line)
+                breakpoints_to_enable[key]
+            except KeyError:
+                pass
+            else:
+                debugger_break_points[ix].Enabled = False
+
     @property
     def last_breakpoint_hit(self):
         return self._debugger.BreakPointLastHit

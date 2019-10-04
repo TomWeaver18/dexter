@@ -44,8 +44,9 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         self._loading_error = NotYetLoadedDebuggerException()
         self.watches = set()
 
-        self.conditional_break_points = None
-        self.conditional_expressions = None
+        self.conditional_break_points = dict()
+        self.conditional_expressions = dict()
+        self.conditional_range_break_points = dict()
 
         try:
             self._interface = self._load_interface()
@@ -105,6 +106,44 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         tb = ''.join(tb).splitlines(True)
         return tb
 
+    def set_limited_bp_range(self):
+        self.initialize_limited_bp_ranges()
+
+        to_enable = list()
+        for unique_file in self.conditional_break_points:
+            for condtional_bp_line in self.conditional_break_points[unique_file]:
+                self.add_breakpoint(unique_file, conditional_bp)
+                to_enable.append(unique_file, conditional_bp)
+
+        to_disable = list()
+        for unique_file in self.conditional_range_break_points:
+            for limited_bp_line in self.conditional_range_break_points[unique_file]:
+                self.add_breakpoint(unique_file, limited_bp_line)
+                to_disable.append((unique_file, limited_bp_line))
+
+        self.enable_breakpoints(to_enable)
+        self.disable_breakpoints(to_disable)
+
+    def initialize_limited_bp_ranges(self):
+        limit_step_commands = self.steps.commands[DexLimitSteps.get_name()]
+
+        unique_files = set()
+        for cmd in limit_step_commands:
+            unique_files.add(cmd.path)
+
+        for unique_file in unique_files:
+            self.conditional_break_points[unique_file] = set()
+            self.conditional_range_break_points[unique_file] = set()
+
+        for cmd in limit_step_commands:
+            self.conditional_break_points[cmd.path].add(cmd.from_line)
+            # from_line + 1 removed the conditional_bp from the bp range it governs.
+            for line in range(cmd.from_line+1, cmd.to_line):
+              self.conditional_range_break_points[unique_file].add(line)
+
+        for cmd in limited_step_commands:
+            self.cond_bp_line_to_expression[(cmd.path, cmd.from_line)] = list()
+
     def add_breakpoints(self):
         if self.steps.limit_steps:
             self.create_limited_breakpoint_set()
@@ -114,12 +153,6 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                     num_lines = len(fp.readlines())
                 for line in range(1, num_lines + 1):
                     self.add_breakpoint(s, line)
-
-    def create_limited_breakpoint_set(self):
-        self.conditional_break_points = self.get_conditional_break_points()
-        self.conditional_expressions = self.map_file_and_lineno_to_conditional_expressions()
-        self.set_conditional_break_points(self.conditional_break_points)
-        self.set_limited_range_break_points()
 
     def _update_step_watches(self, step_info):
         loc = step_info.current_location
@@ -145,55 +178,43 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         """
         return name
 
-    def get_conditional_break_points(self):
-        limit_step_commands = self.steps.commands[DexLimitSteps.get_name()]
-
-        unique_files = set()
-        for cmd in limit_step_commands:
-            unique_files.add(cmd.path)
-
-        conditional_break_points = dict()
-        for unique_file in unique_files:
-            conditional_break_points[unique_file] = set()
-
-        for cmd in limit_step_commands:
-            conditional_break_points[cmd.path].add(cmd.from_line)
-
-        return conditional_break_points
-
-    def map_file_and_lineno_to_conditional_expressions(self):
-        limit_step_commands = self.steps.commands[DexLimitSteps.get_name()]
-
-        start_line_to_expression = dict()
-        for cmd in limit_step_commands:
-            start_line_to_expression[(cmd.path, cmd.from_line)] = list()
-
-        for cmd in limit_step_commands:
-            thang = start_line_to_expression[(cmd.path, cmd.from_line)]
-            thang.append((cmd.eval, cmd.values, cmd.from_line, cmd.to_line))
-
-        return start_line_to_expression
-
-    def set_conditional_break_points(self, conditional_break_points):
-        for source_file in conditional_break_points:
-            for lineno in conditional_break_points[source_file]:
-                self.add_breakpoint(source_file, lineno)
-
-    def create_one_use_range(self, file_path, from_line, to_line):
-        for line in range(from_line, to_line):
-            self.add_breakpoint(file_path, line)
-
-    def conditional_hit(self, bp):
-        expr_key = (bp.File, bp.Line)
+    def conditional_bp_hit(self):
+        bp = self.get_location()
+        expr_key = (bp.path, bp.lineno)
         expr_set = self.conditional_expressions[expr_key]
+        conditional_hit = False
+        bps_to_enable = dict()
         for expr in expr_set:
             to_eval, expected_vals, from_line, to_line = expr
             valueIR = self.evaluate_expression(to_eval)
             value = valueIR.value
             for expected_val in expected_vals:
                 if value == expected_val:
-                    self.create_one_use_range(bp.File, from_line, to_line)
-        return
+                    conditional_hit = True
+                    
+        return conditional_hit
+
+    def another_stepping_behaviour(self):
+        self.steps.clear_steps()
+        self.launch()
+
+        max_steps = self.context.options.max_steps
+        for _ in range(max_steps):
+            while self.is_running:
+                pass
+
+            if self.is_finished:
+                break
+
+            if self.is_breaked:
+                if self.conditional_bp_hit():
+                    self.enable_conditional_ranges()
+                    step_info = self.get_step_info()
+                else if self.limited_range_hit:
+
+        else:
+            raise DebuggerException(
+                'maximum number of steps reached ({})'.format(max_steps))
 
     def different_stepping_behaviour(self):
         self.steps.clear_steps()
@@ -297,6 +318,18 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def add_breakpoint(self, file_, line):
+        pass
+
+    @abc.abstractmethod
+    def enable_breakpoints(self, breakpoints):
+        pass
+
+    @abc.abstractmethod
+    def disable_breakpoints(self, breakpoints):
+        pass
+
+    @abc.abstractmethod
+    def get_location(self):
         pass
 
     @abc.abstractmethod
