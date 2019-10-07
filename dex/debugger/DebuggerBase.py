@@ -112,8 +112,8 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
         to_enable = list()
         for unique_file in self.conditional_break_points:
             for condtional_bp_line in self.conditional_break_points[unique_file]:
-                self.add_breakpoint(unique_file, conditional_bp)
-                to_enable.append(unique_file, conditional_bp)
+                self.add_breakpoint(unique_file, condtional_bp_line)
+                to_enable.append(unique_file, condtional_bp_line)
 
         to_disable = list()
         for unique_file in self.conditional_range_break_points:
@@ -141,12 +141,13 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
             for line in range(cmd.from_line+1, cmd.to_line):
               self.conditional_range_break_points[unique_file].add(line)
 
-        for cmd in limited_step_commands:
+        for cmd in limit_step_commands:
             self.cond_bp_line_to_expression[(cmd.path, cmd.from_line)] = list()
+            
 
     def add_breakpoints(self):
         if self.steps.limit_steps:
-            self.create_limited_breakpoint_set()
+            self.initialize_limited_bp_ranges()
         else:
             for s in self.context.options.source_files:
                 with open(s, 'r') as fp:
@@ -194,6 +195,12 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                     
         return conditional_hit
 
+    def limited_range_hit(self):
+        pass
+
+    def enable_conditional_range(self):
+        pass
+
     def another_stepping_behaviour(self):
         self.steps.clear_steps()
         self.launch()
@@ -210,39 +217,15 @@ class DebuggerBase(object, metaclass=abc.ABCMeta):
                 if self.conditional_bp_hit():
                     self.enable_conditional_ranges()
                     step_info = self.get_step_info()
-                else if self.limited_range_hit:
-
-        else:
-            raise DebuggerException(
-                'maximum number of steps reached ({})'.format(max_steps))
-
-    def different_stepping_behaviour(self):
-        self.steps.clear_steps()
-        self.launch()
-
-        max_steps = self.context.options.max_steps
-        for _ in range(max_steps):
-            while self.is_running:
-                pass
-            
-            if self.is_finished:
-                break
-
-            if self.is_breaked:
-                last_bp_hit = self.last_breakpoint_hit
-                if (last_bp_hit is not None) and (self.conditional_hit(last_bp_hit)):
+                elif self.limited_range_hit():
                     pass
 
-            self.step_index += 1
-            step_info = self.get_step_info()
-            self.go()
-            time.sleep(self.context.options.pause_between_steps)
         else:
             raise DebuggerException(
                 'maximum number of steps reached ({})'.format(max_steps))
 
     def start(self):
-        self.different_stepping_behaviour()
+        self.another_stepping_behaviour()
         if True:
           return
         self.steps.clear_steps()
